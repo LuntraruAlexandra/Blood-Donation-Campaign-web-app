@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inregistrare Cont Nou</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .form-input {
+            @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-150;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center font-sans">
+    <div class="bg-white p-8 md:p-10 rounded-xl shadow-2xl w-full max-w-lg">
+        <h1 class="text-3xl font-extrabold text-center text-red-600 mb-6">Inregistrare Cont Nou</h1>
+        
+        {% if error %}
+            <p class="bg-red-100 text-red-700 p-3 rounded-lg text-center mb-4 border border-red-300">{{ error }}</p>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('signup_page') }}" class="space-y-4">
+            <div>
+                <label for="nume" class="block text-sm font-medium text-gray-700 mb-1">Nume:</label>
+                <input type="text" id="nume" name="nume" required class="form-input" value="{{ last_data.nume if last_data else '' }}">
+            </div>
+
+            <div>
+                <label for="prenume" class="block text-sm font-medium text-gray-700 mb-1">Prenume:</label>
+                <input type="text" id="prenume" name="prenume" required class="form-input" value="{{ last_data.prenume if last_data else '' }}">
+            </div>
+
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email:</label>
+                <input type="email" id="email" name="email" required class="form-input" value="{{ last_data.email if last_data else '' }}">
+            </div>
+
+            <div>
+                <label for="parola" class="block text-sm font-medium text-gray-700 mb-1">Parola:</label>
+                <input type="password" id="parola" name="parola" required class="form-input">
+            </div>
+
+            <div>
+                <label for="rol" class="block text-sm font-bold text-gray-800 mb-1">Rolul Dvs. in Platforma:</label>
+                <select id="rol" name="rol" required class="form-input bg-white" onchange="toggleDonorFields()">
+                    {% for role in roles %}
+                        <option value="{{ role.value }}" {% if last_data and last_data.rol == role.value %}selected{% endif %}>
+                            {{ role.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="donor-fields" class="space-y-4 p-4 border border-blue-200 bg-blue-50 rounded-lg hidden">
+                <h3 class="text-lg font-semibold text-blue-700 border-b pb-2 mb-2">Detalii Donator (Necesar pentru inregistrarea ca Donator)</h3>
+                
+                <div>
+                    <label for="cnp" class="block text-sm font-medium text-gray-700 mb-1">CNP (13 caractere):</label>
+                    <input type="text" id="cnp" name="cnp" class="form-input" placeholder="Introduceti CNP-ul (13 cifre)" value="{{ last_data.cnp if last_data else '' }}" pattern="[0-9]{13}" maxlength="13">
+                </div>
+
+                <div>
+                    <label for="data_nasterii" class="block text-sm font-medium text-gray-700 mb-1">Data Nasterii:</label>
+                    <input type="date" id="data_nasterii" name="data_nasterii" class="form-input" value="{{ last_data.data_nasterii if last_data else '' }}">
+                </div>
+
+                <div>
+                    <label for="grupa_sange" class="block text-sm font-medium text-gray-700 mb-1">Grupa de Sange (NCHAR(3)):</label>
+                    <select id="grupa_sange" name="grupa_sange" class="form-input bg-white">
+                        <option value="">-- Selectati Grupa --</option>
+                        {% for group in blood_groups %}
+                            <option value="{{ group }}" {% if last_data and last_data.grupa_sange == group %}selected{% endif %}>
+                                {{ group }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="oras" class="block text-sm font-medium text-gray-700 mb-1">Oras (de resedinta):</label>
+                    <input type="text" id="oras" name="oras" class="form-input" placeholder="Orasul dvs." value="{{ last_data.oras if last_data else '' }}">
+                </div>
+            </div>
+            
+            <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition duration-200 shadow-md hover:shadow-lg mt-6">
+                Inregistreaza-te
+            </button>
+        </form>
+        
+        <p class="text-center mt-6 text-gray-600">Ai deja cont? 
+            <a href="{{ url_for('login_page') }}" class="text-red-600 hover:text-red-700 font-medium transition duration-150">Autentifica-te aici</a>
+        </p>
+    </div>
+
+    <script>
+        function toggleDonorFields() {
+            const rolSelect = document.getElementById('rol');
+            const donorFields = document.getElementById('donor-fields');
+            const isDonor = rolSelect.value === 'donator';
+            
+            donorFields.classList.toggle('hidden', !isDonor);
+            
+            const donorInputs = donorFields.querySelectorAll('input, select');
+            donorInputs.forEach(input => {
+                input.required = isDonor;
+            });
+        }
+        window.onload = function() {
+            toggleDonorFields();
+        };
+    </script>
+</body>
+</html>

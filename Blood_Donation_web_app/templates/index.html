@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - {{ user.nume }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+    <nav class="bg-white shadow-md border-b-4 border-red-600 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <div class="bg-red-600 p-2 rounded-lg text-white">
+                <i class="fas fa-heartbeat text-xl"></i>
+            </div>
+            <span class="text-2xl font-black text-gray-800 tracking-tight">BLOOD<span class="text-red-600">HELP</span></span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="text-gray-600 hidden md:block">Salut, <strong>{{ user.nume }} {{ user.prenume }}</strong></span>
+            <div class="flex items-center space-x-4">
+    
+
+    {% if user.Rol == 'donator' %}
+    <button onclick="document.getElementById('notificariModal').classList.remove('hidden')" class="relative p-2 text-gray-600 hover:text-red-600 transition duration-200">
+        <i class="fas fa-bell text-xl"></i>
+        {% if data.nr_notificari_noi and data.nr_notificari_noi > 0 %}
+        <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-[10px] font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full shadow-sm">
+            {{ data.nr_notificari_noi }}
+        </span>
+        {% endif %}
+    </button>
+    {% endif %}
+
+    
+</div>
+            <a href="{{ url_for('logout') }}" class="bg-gray-200 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium transition duration-200">
+                <i class="fas fa-sign-out-alt"></i> Deconectare
+            </a>
+        </div>
+    </nav>
+
+    {% if request.args.get('message') %}
+    <div class="max-w-6xl mx-auto px-6 mt-4">
+        <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded shadow-sm flex justify-between items-center">
+            <p class="font-medium"><i class="fas fa-info-circle mr-2"></i> {{ request.args.get('message') }}</p>
+            <button onclick="this.parentElement.style.display='none'" class="text-blue-500 hover:text-blue-800 text-xl font-bold">&times;</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <main class="max-w-6xl mx-auto p-6">
+        
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Panou de Control</h1>
+            <p class="text-gray-500">Rol: <span class="capitalize font-semibold text-red-600">{{ user.Rol.replace('_', ' ') }}</span></p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">Informații Profil</h3>
+                <div class="space-y-3">
+                    <p class="text-sm text-gray-600">Nume: <span class="text-black font-medium">{{ user.nume }} {{ user.prenume }}</span></p>
+                    <p class="text-sm text-gray-600">Email: <span class="text-black font-medium">{{ user.Email }}</span></p>
+                    {% if data.donor_details %}
+                    <p class="text-sm text-gray-600">Grupa Sânge: <span class="bg-red-600 text-white px-2 py-1 rounded text-xs">{{ data.donor_details.grupa }}</span></p>
+                    <p class="text-sm text-gray-600">Oraș: <span class="text-black font-medium">{{ data.donor_details.oras }}</span></p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if user.Rol == 'donator' %}
+            
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col h-full">
+                <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">Istoric Sănătate</h3>
+                
+                {% if data.last_health %}
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="text-center p-2 bg-red-50 rounded-lg border border-red-100">
+                        <p class="text-[10px] text-red-600 font-bold uppercase">Tensiune</p>
+                        <p class="text-lg font-black text-gray-800">{{ data.last_health[1] }}</p>
+                    </div>
+                    <div class="text-center p-2 bg-red-50 rounded-lg border border-red-100">
+                        <p class="text-[10px] text-red-600 font-bold uppercase">Greutate</p>
+                        <p class="text-lg font-black text-gray-800">{{ data.last_health[2] }} kg</p>
+                    </div>
+                </div>
+
+                <button onclick="openIstoricModal()" class="w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-black transition font-bold text-sm shadow-md">
+                    <i class="fas fa-history mr-2"></i> Vezi Toate Evaluările
+                </button>
+                <p class="text-[10px] text-gray-400 mt-2 text-center italic">Ultima actualizare: {{ data.last_health[0].strftime('%d.%m.%Y') }}</p>
+                
+                {% else %}
+                <div class="flex-grow flex items-center justify-center">
+                    <p class="text-sm text-gray-500 italic text-center">Nu există evaluări medicale înregistrate.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-full flex flex-col">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="text-lg font-bold text-gray-700">Programări Viitoare</h3>
+                    <a href="{{ url_for('campanii') }}" class="text-red-600 hover:text-red-800 text-xs font-bold flex items-center bg-red-50 px-2 py-1 rounded-md transition">
+                        <i class="fas fa-plus-circle mr-1"></i> Rezervă loc
+                    </a>
+                </div>
+
+                {% if data.programari %}
+                    <div class="space-y-3 flex-grow overflow-y-auto">
+                        {% for p in data.programari %}
+                        <div class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg border-l-4 border-red-500 shadow-sm">
+                            <i class="far fa-calendar-check text-red-600"></i>
+                            <div>
+                                <p class="text-sm font-bold text-gray-800">{{ p[1] }}</p>
+                                <p class="text-[10px] text-gray-500 font-mono">{{ p[0].strftime('%d.%m.%Y %H:%M') }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button onclick="openProgramariModal()" class="mt-4 w-full bg-red-50 text-red-600 py-2 rounded-lg hover:bg-red-100 transition font-bold text-xs uppercase tracking-widest">
+                        <i class="fas fa-list-ul mr-2"></i> Istoric Programări
+                    </button>
+                {% else %}
+                    <div class="flex-grow flex flex-col justify-center items-center text-center">
+                        <div class="bg-gray-50 p-4 rounded-full mb-3">
+                            <i class="far fa-calendar-times text-gray-300 text-2xl"></i>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-4 italic">Nu ai nicio programare activă.</p>
+                        <a href="{{ url_for('campanii') }}" class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition shadow-sm font-bold text-sm">
+                            Vezi Campanii Disponibile
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if user.Rol == 'organizator_campanie' %}
+<div class="col-span-1 md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+    <div class="flex justify-between items-center mb-4 border-b pb-2">
+        <h3 class="text-lg font-bold text-gray-700">Campaniile Mele</h3>
+        <button onclick="document.getElementById('modalCampanie').classList.remove('hidden')" 
+                class="bg-red-600 text-white px-4 py-1 rounded-lg text-sm font-bold hover:bg-red-700 transition">
+            <i class="fas fa-plus mr-1"></i> Adaugă Campanie
+        </button>
+    </div>
+    <div class="overflow-x-auto max-h-80 overflow-y-auto">
+        <table class="w-full text-left">
+            <thead class="sticky top-0 bg-white">
+                <tr class="text-gray-400 text-[10px] uppercase font-black">
+                    <th class="pb-3 px-2">Campanie & Locație</th>
+                    <th class="pb-3 px-2">Perioadă</th>
+                    <th class="pb-3 text-center">Înscriși</th>
+                    <th class="pb-3 text-center">Donații</th>
+                    <th class="pb-3 text-right">Acțiuni</th> </tr>
+            </thead>
+            <tbody class="text-gray-700">
+                {% for c in data.campanii_proprii %}
+                <tr class="border-t hover:bg-gray-50 transition duration-150">
+                    <td class="py-3 px-2">
+                        <div class="font-bold text-gray-800">{{ c[1] }}</div>
+                        <div class="text-[10px] text-red-500 uppercase font-black">
+                            <i class="fas fa-map-marker-alt mr-1"></i>{{ c[4] }}
+                        </div>
+                    </td>
+                    <td class="py-3 px-2 text-xs font-medium text-gray-500">
+                        {{ c[2].strftime('%d.%m.%Y') }}<br>
+                        {{ c[3].strftime('%d.%m.%Y') }}
+                    </td>
+                    <td class="text-center font-black text-blue-600 text-lg">{{ c[5] }}</td>
+                    <td class="text-center font-black text-green-600 text-lg">{{ c[6] }}</td>
+                    <td class="py-3 px-2 text-right">
+                        <button type="button"
+        class="open-edit-btn text-blue-600 hover:text-blue-800 font-bold text-xs uppercase"
+        data-id="{{ c[0] }}"
+        data-nume="{{ c[1] }}"
+        data-organizator="{{ c[9] }}"
+        data-start="{{ c[2].strftime('%Y-%m-%dT%H:%M') }}"
+        data-sfarsit="{{ c[3].strftime('%Y-%m-%dT%H:%M') }}"
+        data-locatie="{{ c[10] }}"
+        data-telefon="{{ c[7] if c[7] else '' }}"
+        data-email="{{ c[8] if c[8] else '' }}">
+    <i class="fas fa-edit"></i> Edit
+</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+        </div>
+
+        {% if user.Rol == 'doctor' %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6"> <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between h-full">
+        <div>
+            <h3 class="text-lg font-bold text-gray-700 mb-2 border-b pb-2">Evaluări Medicale</h3>
+            <p class="text-sm text-gray-500 mb-4">Înregistrează parametrii vitali pentru donatori (tensiune, hemoglobină, greutate).</p>
+        </div>
+        <a href="{{ url_for('cauta_pacient') }}" class="block text-center w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition font-bold shadow-md">
+            <i class="fas fa-user-plus mr-2"></i> Adaugă Istoric Nou
+        </a>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between h-full">
+        <div>
+            <h3 class="text-lg font-bold text-gray-700 mb-2 border-b pb-2">Gestiune Programări</h3>
+            <p class="text-sm text-gray-500 mb-4">Vizualizează lista de astăzi și validează finalizarea donărilor.</p>
+        </div>
+        <a href="{{ url_for('gestiune_programari') }}" class="block text-center w-full bg-gray-800 text-white py-3 rounded-lg hover:bg-black transition font-bold shadow-md">
+            <i class="fas fa-calendar-check mr-2"></i> Gestionează Programări
+        </a>
+    </div>
+
+    </div>
+{% endif %}
+
+        <div class="mt-12 bg-red-600 rounded-2xl p-8 text-white flex flex-col md:flex-row items-center justify-between shadow-xl">
+            <div class="mb-4 md:mb-0">
+                <h2 class="text-2xl font-bold italic">Ai nevoie de ajutor?</h2>
+                <p class="opacity-80">Contactează centrul de transfuzii local pentru suport tehnic sau medical.</p>
+            </div>
+            <button onclick="openSuportModal()" class="bg-white text-red-600 px-8 py-3 rounded-xl font-black hover:bg-gray-100 transition shadow-lg transform hover:scale-105">
+    Centru Suport
+</button>
+            
+        </div>
+
+    </main>
+
+    <div id="istoricModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="bg-red-600 p-4 text-white flex justify-between items-center">
+                <h3 class="text-xl font-bold italic uppercase tracking-wider"><i class="fas fa-file-medical mr-2"></i>Istoric Medical Complet</h3>
+                <button onclick="closeIstoricModal()" class="text-3xl leading-none hover:text-gray-200 transition">&times;</button>
+            </div>
+            <div class="overflow-auto p-6 flex-grow">
+                <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead class="bg-gray-50 text-gray-600 uppercase text-[10px] font-black sticky top-0 shadow-sm">
+                        <tr>
+                            <th class="p-4 border-b">Data</th>
+                            <th class="p-4 border-b">Tensiune</th>
+                            <th class="p-4 border-b">Greutate</th>
+                            <th class="p-4 border-b text-center">Hb (g/dL)</th>
+                            <th class="p-4 border-b text-center">Status</th>
+                            <th class="p-4 border-b">Observații</th>
+                        </tr>
+                    </thead>
+                    <tbody id="istoricTableBody" class="text-sm divide-y divide-gray-100 text-gray-700"></tbody>
+                </table>
+            </div>
+            <div class="p-4 bg-gray-50 border-t flex justify-end">
+                <button onclick="closeIstoricModal()" class="bg-gray-600 text-white px-8 py-2 rounded-lg hover:bg-gray-800 transition font-black uppercase text-xs tracking-widest shadow-md">Închide</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="programariModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+        <thead class="bg-gray-50 text-gray-600 uppercase text-[10px] font-black sticky top-0 shadow-sm">
+    <tr>
+        <th class="p-4 border-b">Data</th>
+        <th class="p-4 border-b">Campanie</th>
+        <th class="p-4 border-b text-center">Status</th>
+        <th class="p-4 border-b text-right">Acțiuni</th> </tr>
+</thead>
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="bg-blue-600 p-4 text-white flex justify-between items-center">
+                <h3 class="text-xl font-bold italic uppercase tracking-wider"><i class="fas fa-calendar-alt mr-2"></i>Toate Programările</h3>
+                <button onclick="closeProgramariModal()" class="text-3xl leading-none hover:text-gray-200 transition">&times;</button>
+            </div>
+            <div class="overflow-auto p-6 flex-grow">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50 text-gray-600 uppercase text-[10px] font-black sticky top-0 shadow-sm">
+                        <tr>
+                            <th class="p-4 border-b">Data</th>
+                            <th class="p-4 border-b">Campanie</th>
+                            <th class="p-4 border-b text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="progTableBody" class="text-sm divide-y divide-gray-100 text-gray-700"></tbody>
+                </table>
+            </div>
+            <div class="p-4 bg-gray-50 border-t flex justify-end">
+                <button onclick="closeProgramariModal()" class="bg-gray-600 text-white px-8 py-2 rounded-lg hover:bg-gray-800 transition font-black uppercase text-xs tracking-widest shadow-md">Închide</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function anuleazaProgramare(idProg) {
+    if (confirm('Ești sigur că vrei să anulezi această programare?')) {
+        fetch(`/anuleaza_programare/${idProg}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Refresh la pagină pentru a vedea statusul nou și clopoțelul actualizat
+                    location.reload(); 
+                } else {
+                    alert("Eroare: " + result.error);
+                }
+            });
+    }
+}
+    </script>
+    <script>
+    // LOGICA ISTORIC
+    function openIstoricModal() {
+        const modal = document.getElementById('istoricModal');
+        const tableBody = document.getElementById('istoricTableBody');
+        tableBody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-gray-400 italic font-medium"><i class="fas fa-circle-notch fa-spin mr-2"></i>Se preiau datele medicale...</td></tr>';
+        modal.classList.remove('hidden');
+
+        fetch('/get_istoric_sanatate')
+            .then(response => response.json())
+            .then(data => {
+                if (data.istoric && data.istoric.length > 0) {
+                    tableBody.innerHTML = '';
+                    data.istoric.forEach(item => {
+                        const isEligibil = item.eligibil === 'DA';
+                        const statusColor = isEligibil ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200';
+                        tableBody.innerHTML += `
+                            <tr class="hover:bg-red-50/30 transition duration-150">
+                                <td class="p-4 font-bold text-gray-800">${item.data}</td>
+                                <td class="p-4 font-mono font-medium">${item.tensiune}</td>
+                                <td class="p-4 font-medium">${item.greutate} kg</td>
+                                <td class="p-4 text-center">${item.hemoglobina || 'N/A'}</td>
+                                <td class="p-4 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-black border uppercase ${statusColor}">${item.eligibil}</span></td>
+                                <td class="p-4 text-xs text-gray-500 italic leading-relaxed max-w-xs">${item.observatii}</td>
+                            </tr>`;
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-gray-500 italic text-center">Nu au fost găsite înregistrări medicale.</td></tr>';
+                }
+            });
+    }
+
+    function closeIstoricModal() {
+        document.getElementById('istoricModal').classList.add('hidden');
+    }
+
+    // LOGICA PROGRAMĂRI
+    function openProgramariModal() {
+    const modal = document.getElementById('programariModal');
+    const tableBody = document.getElementById('progTableBody');
+    
+    // Mesaj de încărcare
+    tableBody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-gray-400 italic font-medium"><i class="fas fa-circle-notch fa-spin mr-2"></i>Se încarcă lista programărilor...</td></tr>';
+    modal.classList.remove('hidden');
+
+    fetch('/get_toate_programarile')
+        .then(response => response.json())
+        .then(data => {
+            if (data.programari && data.programari.length > 0) {
+                tableBody.innerHTML = ''; // Curățăm mesajul de încărcare
+                
+                data.programari.forEach(p => {
+                    let statusColor = '';
+                    if (p.status === 'in_asteptare') {
+                        statusColor = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                    } else if (p.status === 'anulata') {
+                        statusColor = 'bg-red-100 text-red-700 border-red-200';
+                    } else {
+                        statusColor = 'bg-green-100 text-green-700 border-green-200';
+                    }
+
+                    // Logica pentru butonul de anulare
+                    let coloanaActiune = p.status === 'in_asteptare' ? 
+                        `<button onclick="anuleazaProgramare(${p.id})" class="text-red-600 hover:text-red-800 font-bold text-[10px] uppercase transition flex items-center ml-auto">
+                            <i class="fas fa-times-circle mr-1"></i> Anulează
+                         </button>` : '<span class="text-gray-300">-</span>';
+
+                    tableBody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50 transition duration-150">
+                            <td class="p-3 font-bold text-gray-800 text-sm">${p.data}</td>
+                            <td class="p-3 text-gray-700 font-medium text-sm">${p.campanie}</td>
+                            <td class="p-3 text-center">
+                                <span class="px-2 py-1 rounded-full text-[10px] font-black border uppercase ${statusColor}">${p.status}</span>
+                            </td>
+                            <td class="p-3 text-right">
+                                ${coloanaActiune}
+                            </td>
+                        </tr>`;
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-gray-500 italic">Nu ai nicio programare înregistrată.</td></tr>';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            tableBody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-red-500 font-bold italic">Eroare la preluarea programărilor.</td></tr>';
+        });
+}
+
+    function closeProgramariModal() {
+        document.getElementById('programariModal').classList.add('hidden');
+    }
+
+    // Gestionare click afară pentru închidere modale
+    window.onclick = function(event) {
+        const modalIstoric = document.getElementById('istoricModal');
+        const modalProg = document.getElementById('programariModal');
+        if (event.target == modalIstoric) closeIstoricModal();
+        if (event.target == modalProg) closeProgramariModal();
+    }
+    </script>
+        <div id="modalCampanie" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+        <form action="{{ url_for('adauga_campanie') }}" method="POST" class="p-6 space-y-4">
+            <h3 class="text-xl font-bold border-b pb-2">Configurare Campanie Nouă</h3>
+            
+            <div>
+                <label class="block text-xs font-bold text-gray-400">Nume Campanie</label>
+                <input type="text" name="nume" required class="w-full border rounded p-2 focus:ring-2 focus:ring-red-500 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-400">Organizator (ex: Crucea Roșie)</label>
+                <input type="text" name="organizator_entitate" required class="w-full border rounded p-2 focus:ring-2 focus:ring-red-500 outline-none">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-400">Locație</label>
+                <select name="id_locatie" required class="w-full border rounded p-2 bg-gray-50">
+                    <option value="">Selectează locația...</option>
+                    {% for loc in data.locatii_disponibile %}
+                    <option value="{{ loc[0] }}">{{ loc[1] }} ({{ loc[2] }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400">Telefon Contact</label>
+                    <input type="tel" name="telefon" placeholder="07xxxxxxxx" class="w-full border rounded p-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400">Email Campanie</label>
+                    <input type="email" name="email_campanie" placeholder="email@campanie.ro" class="w-full border rounded p-2">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400">Data Start</label>
+                    <input type="datetime-local" name="data_inceput" required class="w-full border rounded p-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400">Data Sfârșit</label>
+                    <input type="datetime-local" name="data_sfarsit" required class="w-full border rounded p-2">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-400">Descriere</label>
+                <textarea name="descriere" rows="2" class="w-full border rounded p-2"></textarea>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('modalCampanie').classList.add('hidden')" class="flex-1 py-2 bg-gray-200 rounded font-bold hover:bg-gray-300 transition">Anulează</button>
+                <button type="submit" class="flex-1 py-2 bg-red-600 text-white rounded font-bold hover:bg-red-700 transition shadow-lg">Creează Campanie</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function openEditModal(id, nume, telefon, email, start, sfarsit, idLocatie) {
+    const modal = document.getElementById('modalEditCampanie');
+    
+    // Setăm rutele formularelor
+    document.getElementById('editForm').action = "/organizator/edit_campanie/" + id;
+    document.getElementById('deleteForm').action = "/organizator/sterge_campanie/" + id;
+
+    // Populam campurile text
+    document.getElementById('edit_nume').value = nume;
+    document.getElementById('edit_telefon').value = (telefon && telefon !== 'None') ? telefon : '';
+    document.getElementById('edit_email').value = (email && email !== 'None') ? email : '';
+    
+    // ADAUGĂ ACESTE LINII pentru a lăsa datele "by default"
+    document.getElementById('edit_start').value = start;     // Setează data de început existentă
+    document.getElementById('edit_sfarsit').value = sfarsit; // Setează data de sfârșit existentă
+    document.getElementById('edit_locatie').value = idLocatie; // Selectează locația curentă
+
+    modal.classList.remove('hidden');
+}
+</script>
+<div id="modalEditCampanie" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div class="bg-blue-600 p-4 text-white flex justify-between items-center">
+            <h3 class="text-lg font-bold uppercase tracking-wider"><i class="fas fa-edit mr-2"></i>Editează Campania</h3>
+            <button onclick="document.getElementById('modalEditCampanie').classList.add('hidden')" class="text-2xl leading-none">&times;</button>
+        </div>
+        
+        <div class="p-6">
+            <form id="editForm" action="" method="POST" class="space-y-4">
+    <div>
+        <label class="block text-xs font-black uppercase text-gray-400 mb-1">Entitate Organizatoare</label>
+        <input type="text" name="organizator_entitate" id="edit_entitate" required 
+               class="w-full border-2 border-gray-100 rounded-lg p-2 focus:border-blue-500 outline-none">
+    </div>
+
+    <div>
+        <label class="block text-xs font-black uppercase text-gray-400 mb-1">Nume Campanie</label>
+        <input type="text" name="nume" id="edit_nume" required class="w-full border-2 border-gray-100 rounded-lg p-2">
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-xs font-black text-gray-400">Data Start</label>
+            <input type="datetime-local" name="data_inceput" id="edit_start" required class="w-full border-2 border-gray-100 rounded-lg p-2">
+        </div>
+        <div>
+            <label class="block text-xs font-black text-gray-400">Data Sfârșit</label>
+            <input type="datetime-local" name="data_sfarsit" id="edit_sfarsit" required class="w-full border-2 border-gray-100 rounded-lg p-2">
+        </div>
+    </div>
+
+    <div>
+        <label class="block text-xs font-black text-gray-400">Locație</label>
+        <select name="id_locatie" id="edit_locatie" required class="w-full border-2 border-gray-100 rounded-lg p-2">
+            {% for loc in data.locatii_disponibile %}
+                <option value="{{ loc[0] }}">{{ loc[1] }} ({{ loc[2] }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="grid grid-cols-2 gap-4">
+        <input type="text" name="telefon" id="edit_telefon" placeholder="Telefon" class="border-2 border-gray-100 rounded-lg p-2">
+        <input type="email" name="email_campanie" id="edit_email" placeholder="Email" class="border-2 border-gray-100 rounded-lg p-2">
+    </div>
+    
+    <div>
+        <label class="block text-xs font-black text-gray-400">Descriere</label>
+        <textarea name="descriere" id="edit_descriere" rows="2" class="w-full border-2 border-gray-100 rounded-lg p-2"></textarea>
+    </div>
+
+    <button type="submit" class="w-full bg-blue-600 text-white font-black py-3 rounded-xl hover:bg-blue-700 transition">
+        Salvează Modificările
+    </button>
+</form>
+
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <form id="deleteForm" action="" method="POST" onsubmit="return confirm('Sigur ștergi campania?');">
+                    <button type="submit" class="w-full py-2 bg-red-50 text-red-600 rounded-lg font-bold hover:bg-red-100 transition text-xs uppercase tracking-tighter">
+                        <i class="fas fa-trash-alt mr-2"></i> Șterge Campania
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="suportModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+        
+        <div class="bg-gray-800 p-5 text-white flex justify-between items-center border-b-4 border-red-600">
+            <h3 class="text-xl font-black italic uppercase tracking-wider">
+                <i class="fas fa-headset mr-2 text-red-500"></i>Contact Centre Suport
+            </h3>
+            <button onclick="closeSuportModal()" class="text-3xl leading-none hover:text-red-500 transition">&times;</button>
+        </div>
+
+        <div class="overflow-auto p-6 bg-white">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-gray-400 text-[10px] uppercase font-black border-b-2 border-gray-100">
+                        <th class="pb-3 px-2">Nume Campanie</th>
+                        <th class="pb-3 px-2">Locație & Oraș</th>
+                        <th class="pb-3 px-2">Informații Contact</th>
+                    </tr>
+                </thead>
+                <tbody id="suportTableBody" class="text-sm divide-y divide-gray-50 text-gray-700">
+                    <tr>
+                        <td colspan="3" class="p-10 text-center italic text-gray-400 font-medium">
+                            <i class="fas fa-circle-notch fa-spin mr-2"></i>Se preiau datele centrelor...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <script>
+            // Funcția care deschide modalul și încarcă datele prin interogare complexă
+function openSuportModal() {
+    const modal = document.getElementById('suportModal');
+    const tableBody = document.getElementById('suportTableBody');
+    
+    // 1. Afișăm un mesaj de încărcare în timp ce așteptăm baza de date
+    tableBody.innerHTML = '<tr><td colspan="3" class="p-10 text-center italic text-gray-400 font-medium"><i class="fas fa-circle-notch fa-spin mr-2"></i>Se preiau datele centrelor de suport...</td></tr>';
+    
+    // 2. Facem vizibil modalul
+    modal.classList.remove('hidden');
+
+    // 3. Apelăm ruta din Python care realizează JOIN-ul între Campanie, LocatieCampanie și Locatie
+    fetch('/get_centru_suport')
+        .then(response => response.json())
+        .then(data => {
+            if (data.suport && data.suport.length > 0) {
+                // Curățăm tabelul înainte de a introduce datele noi
+                tableBody.innerHTML = '';
+                
+                // Iterăm prin rezultatele interogării complexe
+                data.suport.forEach(item => {
+                    tableBody.innerHTML += `
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="py-4 px-2 font-bold text-gray-800">${item.campanie}</td>
+                            <td class="py-4 px-2 text-gray-600 text-xs">
+                                <div class="flex items-start">
+                                    <i class="fas fa-map-marker-alt text-red-500 mt-1 mr-2"></i>
+                                    <span>${item.locatie}</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-2">
+                                <div class="flex flex-col space-y-1">
+                                    <a href="mailto:${item.email}" class="text-blue-600 hover:text-blue-800 text-xs font-semibold flex items-center">
+                                        <i class="fas fa-envelope mr-1 text-[10px]"></i> ${item.email}
+                                    </a>
+                                    <a href="tel:${item.telefon}" class="text-green-600 hover:text-green-700 text-xs font-bold flex items-center">
+                                        <i class="fas fa-phone-alt mr-1 text-[10px]"></i> ${item.telefon}
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="3" class="p-10 text-center text-gray-500 italic">Momentan nu sunt centre de suport configurate în sistem.</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Eroare la preluarea datelor:', error);
+            tableBody.innerHTML = '<tr><td colspan="3" class="p-10 text-center text-red-500 font-bold italic">Eroare de conexiune la server. Vă rugăm reîncercați.</td></tr>';
+        });
+}
+
+    // Funcția de închidere a modalului
+    function closeSuportModal() {
+        document.getElementById('suportModal').classList.add('hidden');
+    }
+        </script>
+        <div class="p-4 bg-gray-50 border-t flex justify-between items-center">
+            <p class="text-[10px] text-gray-400 italic font-medium px-2">
+                *Datele sunt actualizate în timp real conform bazei de date.
+            </p>
+            <button onclick="closeSuportModal()" class="bg-gray-800 text-white px-8 py-2 rounded-lg font-black uppercase text-xs tracking-widest hover:bg-black transition shadow-md">
+                ÎNCHEIE
+            </button>
+        </div>
+    </div>
+</div>
+<div id="notificariModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[70vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div class="bg-gray-800 p-4 text-white flex justify-between items-center border-b-4 border-red-600">
+            <h3 class="text-lg font-bold uppercase tracking-wider"><i class="fas fa-bell mr-2 text-red-500"></i>Notificări</h3>
+            <button onclick="document.getElementById('notificariModal').classList.add('hidden')" class="text-2xl hover:text-red-500 transition">&times;</button>
+        </div>
+        <div class="overflow-y-auto p-4 bg-gray-50 flex-grow">
+            <div class="space-y-3">
+                {% if data.notificari %}
+                    {% for n in data.notificari %}
+                    <div class="p-4 rounded-xl shadow-sm border-l-4 {{ 'bg-white border-red-500' if not n[3] else 'bg-gray-100 border-gray-400' }}">
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-bold text-sm text-gray-800">{{ n[0] }}</h4>
+                            <span class="text-[10px] text-gray-400 font-mono">{{ n[2].strftime('%d.%m %H:%M') }}</span>
+                        </div>
+                        <p class="text-xs text-gray-600 mt-1">{{ n[1] }}</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-10">
+                        <i class="fas fa-envelope-open text-gray-300 text-3xl mb-2"></i>
+                        <p class="text-sm text-gray-500 italic">Nu ai notificări noi.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="p-3 bg-white border-t flex justify-end">
+            <button onclick="document.getElementById('notificariModal').classList.add('hidden')" class="bg-gray-800 text-white px-6 py-2 rounded-lg font-bold text-xs uppercase hover:bg-black transition">Închide</button>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.open-edit-btn');
+    
+    if (btn) {
+        document.getElementById('editForm').action = "/organizator/edit_campanie/" + btn.dataset.id;
+        
+        // Populăm toate câmpurile, inclusiv organizatorul care lipsea
+        document.getElementById('edit_nume').value = btn.dataset.nume;
+        document.getElementById('edit_entitate').value = btn.dataset.organizator;
+        document.getElementById('edit_start').value = btn.dataset.start;
+        document.getElementById('edit_sfarsit').value = btn.dataset.sfarsit;
+        document.getElementById('edit_locatie').value = btn.dataset.locatie;
+        document.getElementById('edit_telefon').value = btn.dataset.telefon;
+        document.getElementById('edit_email').value = btn.dataset.email;
+
+        document.getElementById('modalEditCampanie').classList.remove('hidden');
+    }
+});
+</script>
+</body>
+</html>

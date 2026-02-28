@@ -1,0 +1,8 @@
+Instructiuni pt Command Prompt:
+Creare virtual environment: python -m venv venv
+Activare venv: venv\Scripts\activate
+Instalare flask: pip install flask(daca are eroare: python -m pip install --upgrade pip)
+Instalare pyodbc : pip install pyodbc
+Accesare link din terminal
+Driver pt server SQL: https://go.microsoft.com/fwlink/?linkid=2266337
+https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver17
